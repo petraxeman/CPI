@@ -1,6 +1,7 @@
+from msilib.schema import File
 import typing, exceptions
 
-from include_handler import IncludeHandler
+from include_handler import IncludeHandler, FileIncludeStack
 from macro_environment import MacroEnv
 from preprocessor_token import PPToken
 
@@ -13,7 +14,7 @@ class Lexer:
         self._file_path = file_path
         self._include_handler = include_handler or IncludeHandler()
         self._macro_env = MacroEnv()
-
+        self._include_file_stack = FileIncludeStack()
         self._keyword_despatch = {
             'if'        : self.__if,
             'ifdef'     : self.__ifdef,
@@ -33,15 +34,22 @@ class Lexer:
         self._is_generating = False
     
     def get_tokens(self, generaotr: bool = True, minimize_ws: bool = True) -> 'PPToken':
+        current_tu = self._include_handler.init_tu(self._file_path)
+        if current_tu is None:
+            raise exceptions.NotFoundFileError(f'Not found file: {self._file_path}')
+        current_tu.file_object.seek(0)
+
         if generaotr:
             if self._is_generating:
-                raise exceptions.ExceptionGeneratingLexer()
+                raise exceptions.AllreadyGeneratingLexerError('Generating allredy started')
+            
             self._is_generating = True
-            for token in _tokens_generator():
-                yield token
+            #
+
+            #
             self._is_generating = False
         else:
-            return [token for token in _tokens_generator()]
+            return [token for token in self._tokens_generator()]
 
     def _tokens_generator(self) -> 'PPToken':
         for i in range(10):
