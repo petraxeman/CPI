@@ -3,8 +3,20 @@ import typing, exceptions
 
 from include_handler import IncludeHandler, FileIncludeStack
 from macro_environment import MacroEnv
-from preprocessor_token import PPToken
 
+
+
+class Token:
+    def __init__(self, symbol: str = '', token_type: str = None) -> None:
+        self.text = symbol
+        self.is_whitespace = symbol in [' ', '\n', '\t']
+        self.type = token_type
+    def add(self, symbol: str) -> None:
+        self.text = self.text + symbol
+    def set_type(self, token_type: str) -> None:
+        self.type = token_type
+    def __repr__(self) -> str:
+        return f'<Token {self.text} {self.type}>'
 
 
 class Lexer:
@@ -60,3 +72,50 @@ class Lexer:
     
     def _next_token(self) -> 'PPToken':
         return PPToken()
+
+
+class Tokeniser:
+    _keywords = (
+            'if', 'ifdef', 'ifndef', 'elif', 'else', 'endif', 'include', 
+            'define', 'undef', 'line', 'error', 'pragma', 'warning'
+        )
+    def __init__(self, file_object: typing.TextIO) -> None:
+        self._file = file_object
+    
+    def get_token(self) -> Token:
+        self._file.seek(0)
+        self._file_text = self._file.read()
+        current_token = None
+
+        for sym in self._file_text:
+            if current_token is None:
+                current_token = Token(sym, token_type = 'UD')
+                continue
+            
+            if current_token.is_whitespace and self._is_whitespace(sym):
+                pass
+            elif current_token.is_whitespace and not self._is_whitespace(sym):
+                yield current_token
+                current_token = Token(sym)
+            elif not current_token.is_whitespace and self._is_whitespace(sym):
+                if current_token.text.lower() in self._keywords:
+                    current_token.set_type('PPD')
+                    yield current_token
+                else:
+                    current_token.set_type('AD')
+                    yield current_token
+                yield Token(' ', token_type='WS')
+            
+            if sym == '#':
+                yield current_token
+                yield Token('#', token_type = '#')
+            elif current_token.text == '#':
+                current_token.set_type('#')
+                yield current_token
+            current_token.add(sym)
+    def _is_whitespace(self, sym: str) -> bool:
+        return sym in [' ', '\n', '\t']
+if __name__ == '__main__':
+    t = Tokeniser(open('./example.cpp', 'r'))
+    for tok in t.get_token():
+        print(tok)
