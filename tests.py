@@ -5,6 +5,7 @@ text = '''
 #ifdef BLOB
 
 int simple_function (int x, int y) {
+    long int age = x * y;
     cout << "Hello world!";
     cout << BLOB;
     return 0;
@@ -15,6 +16,6 @@ int simple_function (int x, int y) {
 
 t = lexer.Tokenizer()
 for i in t.process(text):
-    if i.type == 'WS':
+    if i.text == '' or i.type == 'WS':
         continue
     print(i)
