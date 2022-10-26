@@ -1,10 +1,11 @@
 import re
 from locale import currency
 from sre_parse import WHITESPACE
+from turtle import pos
 
 from sklearn.metrics import classification_report
-from cpp_pp.include_handler import IncludeHandler
-from cpp_pp import cpp_pp_exceptions as exceptions
+from cpp.include_handler import IncludeHandler
+from cpp import cpp_pp_exceptions as exceptions
 
 
 class Token:
@@ -23,7 +24,7 @@ class Lexer:
                          '>', '>=', '<', '<=', '!', '&&', '||', '~', '&', '|', '^', '<<', '>>',
                          '(', ')', '[', ']', '{', '}', '+=', '-=', '*=', '/=', '%=', '|=', '^=',
                          '<<=', '>>=', ' ', '\n', '\\', '\t', '\r', '#', ',', '/*', '*/'],
-                  'PPD': ['define', 'undefine', 'ifdef', 'ifndef'],
+                  'PPD': ['define', 'undef', 'ifdef', 'ifndef', 'error', 'import', 'pragma', 'if', 'elif', 'include', 'else', 'line', 'using'],
                   'CPPD': ['char', 'char8_t', 'char16_t', 'char32_t', 
                            'alignas', 'and', 'and_eq', 'asm', 'auto', 'bitand', 'bitor', 'bool', 'break', 'case', 'catch', 'class',
                            'compl', 'concept', 'const', 'const_cast', 'consteval', 'constexpr', 'constinit', 'continiue', 'co_await',
@@ -46,11 +47,41 @@ class Lexer:
         if text is None:
             with open(self.root_file_path, 'r', encoding='utf8') as file:
                 text = file.read()
-        
+
         current_token = ''
+        position = (1, 1)
+        skip_symbols = 0
         in_string = False; in_comment = False
 
+        for char_index in range(len(text)):
+
+            char = text[char_index]
+
+            if skip_symbols > 0:
+                skip_symbols -= 1
+                continue
+            
+            if in_comment:
+                if text[char_index:char_index+2] == '*/':
+                    in_comment = False
+                    current_token += char
+                    continue
+                current_token += char
+                continue
+
+            if in_string:
+                if char == '"' or char == "'":
+                    in_string = False
+                    current_token += char
+                    continue
+                current_token += char
+                continue
+
         for char in text:
+            position = (position[0]+1, position[1])
+            if char == '\n':
+                position = (0, position[1]+1)
+            pass
             if current_token == '':
                 current_token += char
                 continue
@@ -101,7 +132,7 @@ class Lexer:
                 if _is_str:
                     yield Token(_str_value, 'STR_CONST'); current_token = ''
                 
-                if not _is_num and not _is_str:
+                if not _is_num and not _is_str and current_token != '':
                     yield Token(current_token, 'ID'); current_token = ''
             
             current_token += char

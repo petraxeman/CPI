@@ -1,4 +1,4 @@
-from cpp_pp import lexer
+from cpp import lexer
 
 text = '''
 /*
@@ -237,8 +237,6 @@ byte GetVehiclePosOnBuild(TileIndex hangar_tile)
 '''
 
 t = lexer.Lexer('0', '0')
-print(t.DERECTIVES['SD'])
 for i in t.process(text):
-    if i.text == '' or i.type == 'WS' or i.text == ' ' or i.text == '\n':
-        continue
     print(i)
+input('--- PAUSE ---')
