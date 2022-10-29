@@ -1,12 +1,8 @@
 import re
-from locale import currency
-from sre_parse import WHITESPACE
-from turtle import pos
 
-from sklearn.metrics import classification_report
 from cpp.include_handler import IncludeHandler
 from cpp import cpp_pp_exceptions as exceptions
-
+from general.base_lexer import BaseLexer
 
 class Token:
     def __init__(self, text: str, token_type: str = 'UND') -> None:
@@ -19,7 +15,7 @@ class Token:
         return f'<Token {repr(self.text)} {self.type}>'
 
 
-class Lexer:
+class Lexer(BaseLexer):
     DERECTIVES = {'SD': [':', ';', '=', '-', '+', '*', '/', '%', '++', '--', '==', '!=',
                          '>', '>=', '<', '<=', '!', '&&', '||', '~', '&', '|', '^', '<<', '>>',
                          '(', ')', '[', ']', '{', '}', '+=', '-=', '*=', '/=', '%=', '|=', '^=',
@@ -136,21 +132,3 @@ class Lexer:
                     yield Token(current_token, 'ID'); current_token = ''
             
             current_token += char
-
-    def is_num(self, string: str) -> bool or str:
-        if string == '':
-            return False, None
-        if len(re.findall(self.IS_INT_RE, string)) > 0:
-            return True, int(string)
-        elif len(re.findall(self.IS_FLOAT_RE, string)) > 0:
-            return True, float(string)
-        return False, None
-    
-    def is_str(self, string: str) -> bool or str:
-        if string == '':
-            return False, None
-        if len(re.findall(self.IS_STRING_RE, string)) > 0:
-            string = string.strip('"')
-            string = string.strip("'")
-            return True, string
-        return False, None
