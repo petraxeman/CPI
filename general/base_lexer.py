@@ -13,16 +13,23 @@ class BaseLexer:
     IS_FLOAT_RE = re.compile('^([+-]?[0-9]*\.?[0-9]*)$')
     IS_INT_RE = re.compile('^([+-]?[0-9]\.?0?)$')
     IS_STRING_RE = re.compile(r"""([bruf]*)(\"""|'''|"|')(?:(?!\2)(?:\\.|[^\\]))*\2""")
+    IS_KEYWORD_RE = re.compile(r'^[a-zA-Z_][0-9a-zA-Z_]*$')
+    
 
-    def __init__(self, file_origin: 'FileOrigin', include_handler: 'IncludeHandler'):
-        self.file_origin = file_origin
-        self.include_handler = include_handler
+    def is_keyword(self, string: str) -> bool:
+        if string == '':
+            return False, None
+        
+        if len(re.findall(self.IS_KEYWORD_RE, string)) > 0:
+            return True, string
+        
+        return False, None
 
 
     def is_number(self, string: str) -> tuple[bool, str]:
         if string == '':
             return False, None
-
+        
         if len(re.findall(self.IS_INT_RE, string)) > 0:
             return True, int(string)
         elif len(re.findall(self.IS_FLOAT_RE, string)) > 0:
