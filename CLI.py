@@ -1,7 +1,7 @@
 import argparse
 
 from matplotlib.style import available
-import exceptions
+import general.exceptions as exceptions
 import CPI
 
 

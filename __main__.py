@@ -1,6 +1,6 @@
 import argparse
 
-import exceptions
+import general.exceptions as exceptions
 import CPI
 
 

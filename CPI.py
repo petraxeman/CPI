@@ -1,4 +1,4 @@
-from cpp import lexer, parser
+from cpp import parser, tokenizer
 from general import preprocessor
 
 def main(directory: str, file_path: str,
